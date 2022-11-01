@@ -1,0 +1,12 @@
+api\MemberAPI.class
+dao\MemberDAO.class
+dao\BookDAO.class
+dao\DAO.class
+utils\JsonCustom.class
+model\Book.class
+utils\ImageCustom.class
+api\BookAPI.class
+global\Init.class
+model\MemberLogin.class
+filters\SessionFilter.class
+model\Member.class
