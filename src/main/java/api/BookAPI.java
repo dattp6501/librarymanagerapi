@@ -3,6 +3,7 @@ package api;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -68,6 +69,7 @@ public class BookAPI extends HttpServlet{
                 bJson.put("type", b.getType());
                 bJson.put("release_date", b.getReleaseDateFormat());
                 bJson.put("page_number", b.getPageNumber());
+                bJson.put("image", b.getImage());
                 listJson.put(bJson);
             }
             result.put("list", listJson);
@@ -111,7 +113,15 @@ public class BookAPI extends HttpServlet{
             String type = bookJson.getString("type");
             String releaseDate = bookJson.getString("release_date");
             int pageNumber = bookJson.getInt("page_number");
-            Book book = new Book(id, pageNumber, title, author, type, releaseDate);
+            String image = bookJson.getString("image");
+            if(image.equals("")){
+                resp1.put("code",300);
+                resp1.put("description","Không có ảnh");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            Book book = new Book(id, pageNumber, title, author, type, releaseDate, image);
             BookDAO bookDAO = new BookDAO();
             if(!bookDAO.connect()){
                 resp1.put("code",500);
@@ -161,7 +171,7 @@ public class BookAPI extends HttpServlet{
             }
             JSONObject bookJson = objReq.getJSONObject("book");
             int id = bookJson.getInt("id");
-            Book book = new Book(id, -1, null, null, null, null);
+            Book book = new Book(id, -1, null, null, null, new Date(), "");
             BookDAO bookDAO = new BookDAO();
             if(!bookDAO.connect()){
                 resp1.put("code",500);
@@ -215,7 +225,15 @@ public class BookAPI extends HttpServlet{
             String type = bookJson.getString("type");
             String releaseDate = bookJson.getString("release_date");
             int pageNumber = bookJson.getInt("page_number");
-            Book book = new Book(-1, pageNumber, title, author, type, releaseDate);
+            String image = bookJson.getString("image");
+            if(image.equals("")){
+                resp1.put("code",300);
+                resp1.put("description","Không có ảnh");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            Book book = new Book(-1, pageNumber, title, author, type, releaseDate, image);
             BookDAO bookDAO = new BookDAO();
             if(!bookDAO.connect()){
                 resp1.put("code",500);

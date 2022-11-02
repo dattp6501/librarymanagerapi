@@ -4,7 +4,8 @@ create table books(
     author nvarchar(255),
     typeb nvarchar(255),
     release_date date,
-    page_number integer not null
+    page_number integer not null,
+    image longblob not null
 );
 alter table books auto_increment = 1;
 create table members(

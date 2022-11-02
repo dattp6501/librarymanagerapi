@@ -36,6 +36,7 @@ public class BookDAO extends DAO{
                 e.printStackTrace();
             }
             book.setPageNumber(res.getInt("page_number"));
+            book.setImageBytes(res.getBytes("image"));
             list.add(book);
         }
         res.close();
@@ -43,13 +44,14 @@ public class BookDAO extends DAO{
     }
     public boolean add(Book book) throws SQLException{
         boolean ok = false;
-        String sql = "insert into books(title,author,typeb,release_date,page_number) values(?,?,?,?,?)";
+        String sql = "insert into books(title,author,typeb,release_date,page_number,image) values(?,?,?,?,?,?)";
         PreparedStatement ps = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
         ps.setString(1, book.getTitle());
         ps.setString(2, book.getAuthor());
         ps.setString(3, book.getType());
         ps.setString(4, book.getReleaseDateFormat());
         ps.setInt(5, book.getPageNumber());
+        ps.setBytes(6, book.getImageBytes());
         ps.executeUpdate();
         ResultSet res = ps.getGeneratedKeys();
         if(res.next()){
@@ -61,14 +63,15 @@ public class BookDAO extends DAO{
     }
     public boolean update(Book book) throws SQLException{
         boolean ok = false;
-        String sql = "update books set title=?,author=?,typeb=?,release_date=?,page_number=? where id=?";
+        String sql = "update books set title=?,author=?,typeb=?,release_date=?,page_number=?,image=? where id=?";
         PreparedStatement ps = connection.prepareStatement(sql);
         ps.setString(1, book.getTitle());
         ps.setString(2, book.getAuthor());
         ps.setString(3, book.getType());
         ps.setString(4, book.getReleaseDateFormat());
         ps.setInt(5, book.getPageNumber());
-        ps.setInt(6, book.getId());
+        ps.setBytes(6, book.getImageBytes());
+        ps.setInt(7, book.getId());
         ok = ps.executeUpdate()>=1;
         return ok;
     }
