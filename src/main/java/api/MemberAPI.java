@@ -28,7 +28,7 @@ public class MemberAPI extends HttpServlet{
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
         String url = req.getRequestURI();
-        String host = "/librarymanagerapi";
+        String host = Init.HOST;
         if(url.equals(host+"/member/login")){
             memberLogin(req,resp);
         }else if(url.equals(host+"/member/register")){

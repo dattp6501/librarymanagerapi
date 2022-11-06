@@ -20,6 +20,7 @@ public class SessionFilter{
         if(time_current<user.getTime().getTime()){
             return 1;
         }
+        Init.MEMBER_LOGINS.remove(user);
         return 2;
     }
 }

@@ -31,7 +31,7 @@ public class MemberDAO extends DAO{
 
     public boolean add(Member member) throws SQLException{
         boolean ok = false;
-        String sql = "insert into members(fullname,email,username,passwd) values(?,?,?,?)";
+        String sql = "insert into members(fullname,email,username,passwd) values(N?,?,?,?)";
         PreparedStatement ps = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
         ps.setString(1,member.getFullName());
         ps.setString(2,member.getEmail());

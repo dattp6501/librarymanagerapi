@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import dao.BookDAO;
 import filters.SessionFilter;
+import global.Init;
 import model.Book;
 import utils.JsonCustom;
 
@@ -26,7 +27,7 @@ public class BookAPI extends HttpServlet{
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
         String url = req.getRequestURI();
-        String host = "/librarymanagerapi";
+        String host = Init.HOST;
         if(url.equals(host+"/book/get_books")){
             getBooks(req,resp);
         }else if(url.equals(host+"/book/update_books")){

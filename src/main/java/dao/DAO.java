@@ -4,10 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import global.Init;
+
 public class DAO {
-    private final String url = "jdbc:mysql://localhost:3306/quanlysach";
-    private final String username = "dattp";
-    private final String password = "dattp";
+    private final String url = Init.JDBC;
+    private final String username = Init.USER_NAME_DB;
+    private final String password = Init.PASS_WORD_DB;
     protected Connection connection = null;
     public DAO() {
         super();
