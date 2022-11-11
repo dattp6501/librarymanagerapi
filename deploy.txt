@@ -1,2 +1,2 @@
-heroku war:deploy E:\workspace\website\librarymanagerapi\target\librarymanagerapi.war --app librarymanagerapimain
+heroku war:deploy E:\workspace\website\librarymanagerapi\target\librarymanagerapi.war --app library-managerapi
 https://librarymanagerapimain.herokuapp.com/

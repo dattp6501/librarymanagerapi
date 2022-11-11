@@ -44,6 +44,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String title = objReq.getString("title");
             int limit = -1;
             try {
@@ -91,6 +92,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             int res = SessionFilter.checkSession(session);
             if(res==0){
@@ -154,6 +156,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             int res = SessionFilter.checkSession(session);
             if(res==0){
@@ -204,6 +207,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             int res = SessionFilter.checkSession(session);
             if(res==0){

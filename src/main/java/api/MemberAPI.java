@@ -43,6 +43,7 @@ public class MemberAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String username = objReq.getString("username");
             String password = objReq.getString("password");
             Member member = new Member(-1, null, null, username, password);
@@ -92,6 +93,7 @@ public class MemberAPI extends HttpServlet{
         JSONObject objReq =new JSONObject(JsonCustom.JsonToString(req.getReader()).toString());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String fullname = objReq.getString("fullname");
             String email = objReq.getString("email");
             String username = objReq.getString("username");
@@ -147,6 +149,7 @@ public class MemberAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             int res = SessionFilter.checkSession(session);
             if(res==0){
