@@ -1,16 +1,52 @@
 package model;
 
+import utils.ImageCustom;
+
 public class Member {
     private int id;
     private String email,fullName,userName,passWord;
+    private Group group;
+    private String image;
     public Member() {
     }
-    public Member(int id, String email, String fullName, String userName, String passWord) {
+    public Member(int id, String email, String fullName, String userName, String passWord, Group group, String image) {
         this.id = id;
         this.email = email;
         this.fullName = fullName;
         this.userName = userName;
         this.passWord = passWord;
+        this.group = group;
+        this.image = image;
+    }
+    public Member(int id, String email, String fullName, String userName, String passWord, Group group, byte[] image) {
+        this.id = id;
+        this.email = email;
+        this.fullName = fullName;
+        this.userName = userName;
+        this.passWord = passWord;
+        this.group = group;
+        if(image==null || image.equals("")){
+            this.image = null;
+        }else{
+            this.image = ImageCustom.bytesToB64(image);
+        }
+    }
+    public String getImage() {
+        return image;
+    }
+    public byte[] getImageBytes(){
+        if(image==null || image.equals("")) return null;
+        return ImageCustom.B64ToBytes(image);
+    }
+    public void setImage(String image) {
+        this.image = image;
+    }
+    public void setImageBytes(byte[] image) {
+        if(image==null){
+            this.image = null;
+            return;
+        }
+        this.image = ImageCustom.bytesToB64(image);
     }
     public int getId() {
         return id;
@@ -42,11 +78,13 @@ public class Member {
     public void setPassWord(String passWord) {
         this.passWord = passWord;
     }
-    @Override
-    public String toString() {
-        return "Member [id=" + id + ", email=" + email + ", fullName=" + fullName + ", userName=" + userName
-                + ", passWord=" + passWord + "]";
+    public Group getGroup() {
+        return group;
     }
+    public void setGroup(Group group) {
+        this.group = group;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -68,5 +106,10 @@ public class Member {
         if (userName.equals(other.userName)) 
             return false;
         return true;
+    }
+    @Override
+    public String toString() {
+        return "Member [id=" + id + ", email=" + email + ", fullName=" + fullName + ", userName=" + userName
+                + ", passWord=" + passWord + ", group=" + group + ", image=" + image + "]";
     }
 }

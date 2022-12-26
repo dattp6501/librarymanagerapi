@@ -23,4 +23,22 @@ public class SessionFilter{
         Init.MEMBER_LOGINS.remove(user);
         return 2;
     }
+
+    public static MemberLogin checkMemberBySession(String session){
+        MemberLogin user = new MemberLogin(null, session);
+        // kiem tra xem da dang nhap hay chua
+        int index = Init.MEMBER_LOGINS.indexOf(user);
+        if(index<0){
+            return null;
+        }
+        user = Init.MEMBER_LOGINS.get(index);
+        // kiem tra xem da het phien chua
+        long time_current = new Date().getTime();
+        if(time_current<user.getTime().getTime()){
+            return user;
+        }
+        user.setTime(null);
+        Init.MEMBER_LOGINS.remove(user);
+        return user;
+    }
 }

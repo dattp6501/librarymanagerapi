@@ -52,4 +52,11 @@ public class DAO {
     public void setConnection(Connection connection) {
         this.connection = connection;
     }
+    public static void main(String[] args) {
+        DAO dao = new DAO();
+        if(!dao.connect()){
+            System.out.println("Khong ket noi duoc CSDL");
+        }
+        dao.close();
+    }
 }

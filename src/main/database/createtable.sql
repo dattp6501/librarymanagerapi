@@ -1,50 +1,85 @@
 create table books(
 	id integer primary key auto_increment,
-    title nvarchar(255) not null,
+    title nvarchar(255) not null unique,
     author nvarchar(255),
     typeb nvarchar(255),
     release_date date,
     page_number integer not null,
-    image longblob
+    image longblob,
+    price float not null,
+    number integer not null
+);
+
+create table voucher_booking(
+	id integer primary key auto_increment,
+    name nvarchar(255) not null unique,
+    type varchar(10) not null, -- %(giam theo phan tram),n(giam theo gia co dinh)
+    value float not null,
+    created_date datetime not null,
+    note text,
+    active integer not null
+);
+alter table voucher_booking auto_increment = 1;
+
+create table voucher_of_booking(
+	booking_id integer not null,
+    voucher_booking_id integer not null
+);
+
+create table type_of_book(
+	book_id integer not null,
+    type_id integer not null
+);
+
+create table type_book(
+	id integer primary key auto_increment,
+    name nvarchar(255) not null unique,
+    note text
+);
+create table comment(
+	book_id integer,
+    member_id integer,
+    star integer not null,
+    content text,
+    date datetime not null
 );
 alter table books auto_increment = 1;
 create table members(
 	id integer primary key auto_increment,
     fullname nvarchar(255) not null,
-    email varchar(100) unique not null,
+    email varchar(100) not null unique,
     username varchar(50) not null unique,
-    passwd varchar(20) not null
+    passwd varchar(20) not null,
+    group_id integer,
+    foreign key(group_id) references group_(id)
 );
 alter table members auto_increment = 1;
--- ---------- BTL 2----------------
-create table groups(
-	id integer primary key auto_increment,
-    name varchar(20) not null,
-    note nvarchar(255)
-);
-alter table groups auto_increment = 1;
 
-create table membergroup(
+create table booking(
 	id integer primary key auto_increment,
+    member_id integer not null,
+    date datetime not null,
+    note text
+);
+
+create table booked(
+	booking_id integer not null,
+	book_id integer not null,
+    price float not null,
+    number integer not null,
+    note text
+);
+create table cart(
 	member_id integer not null,
-    group_id integer not null,
-    foreign key(member_id) references members(id),
-    foreign key(group_id) references groups(id)
+    book_id integer not null,
+    book_number integer
 );
-alter table membergroup auto_increment = 1;
-
-create table permission(
+-- ---------- BTL 2----------------
+create table group_(
 	id integer primary key auto_increment,
-    name varchar(30) not null unique,
+    group_name varchar(255) not null unique,
     note nvarchar(255)
 );
-alter table permission auto_increment = 1;
+alter table group_ auto_increment = 1;
 
-create table permissiongroup(
-	id integer primary key auto_increment,
-    group_id integer not null,
-    permission_id integer not null,
-    foreign key(group_id) references groups(id),
-    foreign key(permission_id) references permission(id)
-);
-alter table permissiongroup auto_increment = 1;
+
