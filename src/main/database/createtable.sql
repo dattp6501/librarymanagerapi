@@ -4,6 +4,7 @@ create table books(
     author nvarchar(255),
     typeb nvarchar(255),
     release_date date,
+    create_date date,
     page_number integer not null,
     image longblob,
     price float not null,
@@ -51,6 +52,7 @@ create table members(
     username varchar(50) not null unique,
     passwd varchar(20) not null,
     group_id integer,
+    image longblob,
     foreign key(group_id) references group_(id)
 );
 alter table members auto_increment = 1;

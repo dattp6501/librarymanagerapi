@@ -59,6 +59,8 @@ public class BookingAPI extends HttpServlet{
             getAllVoucherBooking(req, resp);
         }else if(url.equals(host+"/boooking/get_voucher_booking_active")){
             getVoucherBookingActive(req, resp);
+        }else if(url.equals(host+"/boooking/stats_booking_current_day")){
+            StatsBookingCurrentDayAdmin(req, resp);
         }
     }
 
@@ -314,8 +316,16 @@ public class BookingAPI extends HttpServlet{
                 writer.close();
                 return;
             }
+            // lay du lieu gui den
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            format.parse(objReq.getString("date"));// kiem tra tinh hop le cua date
+            String dateFrom = objReq.getString("date");
+            String dateTo = null;
+            format.parse(dateFrom);// kiem tra tinh hop le cua date
+            try{dateTo = objReq.getString("date_to");}catch(Exception e){}
+            if(dateTo!=null){
+                format.parse(dateTo);
+            }
+            // 
             BookingDAO bookingDAO = new BookingDAO();
             if(!bookingDAO.connect()){
                 resp1.put("code",400);
@@ -326,7 +336,7 @@ public class BookingAPI extends HttpServlet{
             }
             JSONObject result = new JSONObject();
             JSONArray listJson = new JSONArray();
-            ArrayList<Booking> bookings = bookingDAO.getAllByDate(objReq.getString("date")); bookingDAO.close();
+            ArrayList<Booking> bookings = bookingDAO.getAllByDate(dateFrom,dateTo); bookingDAO.close();
             for(Booking bk : bookings){
                 JSONObject bookingJSON = new JSONObject();
                 bookingJSON.put("booking_id",bk.getId());
@@ -967,4 +977,82 @@ public class BookingAPI extends HttpServlet{
         writer.println(resp1.toString());
         writer.close();
     }
+
+    private void StatsBookingCurrentDayAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        PrintWriter writer = resp.getWriter();
+        JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
+        JSONObject resp1 = new JSONObject();
+        try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
+            String session = objReq.getString("session");
+            MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
+            if(memberLogin==null){
+                resp1.put("code", 500);
+                resp1.put("description", "Người dùng chưa đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(memberLogin.getTime()==null){
+                resp1.put("code", 700);
+                resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            // kiem tra nhom
+            if(!memberLogin.getMember().getGroup().equals(Init.ADMIN_GROUP)){
+                resp1.put("code", 300);
+                resp1.put("description", "Không đủ quyền");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            BookingDAO bookingDAO = new BookingDAO();
+            if(!bookingDAO.connect()){
+                resp1.put("code",400);
+                resp1.put("description","Không kết nối được CSDL");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            JSONObject result = new JSONObject();
+            ArrayList<Booking> bookings = bookingDAO.getAllByDate(format.format(new Date())+" 00:00:00",null); bookingDAO.close();
+            int cancelBooking = 0;
+            int successBooking = 0;
+            int waitBooking = 0;
+            float revenue = 0;
+            for(Booking bk : bookings){
+                if(bk.getSuccess()==-1){
+                    waitBooking++;
+                    continue;
+                }
+                if(bk.getSuccess()==0){
+                    cancelBooking++;
+                    continue;
+                }
+                if(bk.getSuccess()==1){
+                    successBooking++;
+                    revenue += bk.totalPrice();
+                    continue;
+                }
+            }
+            result.put("total_booking", bookings.size());
+            result.put("cancel_booking", cancelBooking);
+            result.put("waiting_booking", waitBooking);
+            result.put("success_booking", successBooking);
+            result.put("revenue", revenue);
+            resp1.put("code",200);
+            resp1.put("description","Thành công");
+            resp1.put("result", result);
+        } catch (Exception e) {
+            resp1.put("code",300);
+            resp1.put("description",e.getMessage());
+        }
+        writer.println(resp1.toString());
+        writer.close();
+    }
+
+    
 }

@@ -19,6 +19,8 @@ public class DAO {
         try {
             Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection(url, username, password);
+            // Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            // connection = DriverManager.getConnection("jdbc:sqlserver://sql111.epizy.com:3306;databaseName=epiz_33620435_epiz_33620435_;user=epiz_33620435;password=WenMKRNqFAE");
             resp = true;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -56,6 +58,7 @@ public class DAO {
         DAO dao = new DAO();
         if(!dao.connect()){
             System.out.println("Khong ket noi duoc CSDL");
+            return;
         }
         dao.close();
     }

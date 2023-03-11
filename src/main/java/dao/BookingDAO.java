@@ -129,11 +129,17 @@ public class BookingDAO extends DAO{
         return booking;
     }
 
-    public ArrayList<Booking> getAllByDate(String startDate) throws SQLException, ParseException{
+    public ArrayList<Booking> getAllByDate(String startDate, String endDate) throws SQLException, ParseException{
         ArrayList<Booking> list = new ArrayList<>();
-        String select = "SELECT * FROM booking WHERE date>=?";
+        String select = "SELECT * FROM booking WHERE ?<=date ";
+        if(endDate!=null){
+            select += "AND date<=?";
+        }
         PreparedStatement ps = connection.prepareStatement(select);
         ps.setString(1, startDate);
+        if(endDate!=null){
+            ps.setString(2,endDate);
+        }
         ResultSet res = ps.executeQuery();
         BookDAO bookDAO = new BookDAO(); bookDAO.setConnection(connection);
         while(res.next()){
@@ -301,7 +307,7 @@ public class BookingDAO extends DAO{
             return;
         }
         try {
-            System.out.println(dao.getBookingByID(1).totalPrice());
+            System.out.println(dao.getAllByDate("2022-12-27 00:00:00", "2022-12-27 14:07:00").size());
             dao.close();
         } catch (SQLException e) {
             e.printStackTrace();
