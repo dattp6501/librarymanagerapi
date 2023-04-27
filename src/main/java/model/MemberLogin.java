@@ -1,5 +1,6 @@
 package model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import global.Init;
@@ -31,6 +32,9 @@ public class MemberLogin {
     }
     public void setTime(Date time) {
         this.time = time;
+    }
+    public String getTimeStr(){
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time);
     }
     @Override
     public int hashCode() {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/librarymanagerapi">
+    <Resource name="DBCon" auth="container" type="javax.sql.DataSource"
+        username="dattp" password="dattp"
+        driverClassName="com.mysql.jdbc.Driver"
+        url="jdbc:mysql://localhost:3306/quanlysach"
+        maxActive="0" maxIde="3">
+    </Resource>
+</Context>

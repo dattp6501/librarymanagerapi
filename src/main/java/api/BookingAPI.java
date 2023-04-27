@@ -26,6 +26,7 @@ import model.Member;
 import model.MemberLogin;
 import model.VoucherBooking;
 import utils.JsonCustom;
+import utils.Mail;
 
 
 @WebServlet(urlPatterns = {"/boooking/*"})
@@ -59,8 +60,6 @@ public class BookingAPI extends HttpServlet{
             getAllVoucherBooking(req, resp);
         }else if(url.equals(host+"/boooking/get_voucher_booking_active")){
             getVoucherBookingActive(req, resp);
-        }else if(url.equals(host+"/boooking/stats_booking_current_day")){
-            StatsBookingCurrentDayAdmin(req, resp);
         }
     }
 
@@ -134,8 +133,9 @@ public class BookingAPI extends HttpServlet{
             }catch(Exception e){
                 voucherBookings.clear();
             }
-
-            Booking booking = new Booking(-1, bookingDate, member, bookeds, bookingNote,-1,voucherBookings);
+            // booking
+            String address = objReq.getString("address");
+            Booking booking = new Booking(-1, bookingDate, member, bookeds, bookingNote,-1, 0, address, voucherBookings);
             BookingDAO bookingDAO = new BookingDAO();
             if(!bookingDAO.connect()){
                 resp1.put("code",400);
@@ -181,12 +181,15 @@ public class BookingAPI extends HttpServlet{
                 bookingDAO.close();
                 return;
             }
-            bookingDAO.close();
             resp1.put("code",200);
             resp1.put("description","Thành công");
+            try {
+                Mail.sendMail(memberLogin.getMember().getEmail(),Mail.createrFormBookingSuccess(bookingDAO.getBookingByID(booking.getId())));
+            } catch (Exception e1) {e1.printStackTrace();}
+            bookingDAO.close();
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -230,10 +233,11 @@ public class BookingAPI extends HttpServlet{
             for(Booking bk : bookings){
                 JSONObject bookingJSON = new JSONObject();
                 bookingJSON.put("booking_id",bk.getId());
-                bookingJSON.put("booking_date",bk.getDateStr());
+                bookingJSON.put("booking_date",bk.getDateStrMail());
                 bookingJSON.put("booking_note",bk.getNote());
                 bookingJSON.put("booking_total_price", bk.totalPrice());
                 bookingJSON.put("booking_success", bk.getSuccess());
+                bookingJSON.put("booking_pay",bk.getPay());
                 // voucher
                 JSONArray listVoucherJSON = new JSONArray();
                 for(VoucherBooking v : bk.getVoucherBookings()){
@@ -280,7 +284,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -340,10 +344,11 @@ public class BookingAPI extends HttpServlet{
             for(Booking bk : bookings){
                 JSONObject bookingJSON = new JSONObject();
                 bookingJSON.put("booking_id",bk.getId());
-                bookingJSON.put("booking_date",bk.getDateStr());
+                bookingJSON.put("booking_date",bk.getDateStrMail());
                 bookingJSON.put("booking_note",bk.getNote());
                 bookingJSON.put("booking_total_price", bk.totalPrice());
                 bookingJSON.put("booking_success", bk.getSuccess());
+                bookingJSON.put("booking_pay",bk.getPay());
                 // voucher
                 JSONArray listVoucherJSON = new JSONArray();
                 for(VoucherBooking v : bk.getVoucherBookings()){
@@ -396,7 +401,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -489,9 +494,12 @@ public class BookingAPI extends HttpServlet{
             bookingDAO.close();
             resp1.put("code",200);
             resp1.put("description","Thành công");
+            // try {
+            //     Mail.sendMail(booking.getMember().getEmail(), "Đơn hàng");
+            // } catch (Exception e1) {e1.printStackTrace();}
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -576,7 +584,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("description","Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -642,13 +650,14 @@ public class BookingAPI extends HttpServlet{
                 String bookedNote = ((JSONObject)bookedJSON).getString("book_note");
                 bookeds.add(new Booked(book, bookedPrice, bookedNumber, bookedNote));
             }
-            Booking booking = new Booking(bookingID, null, null, bookeds, null,-1,null);
-            System.out.println(booking.getId());
+            // 
+            String address = objReq.getString("address");
+            Booking booking = new Booking(bookingID, null, null, bookeds, null,-1, 0, address,null);
             resp1.put("code",200);
             resp1.put("description","Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -722,7 +731,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("description","Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -785,7 +794,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("description","Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -847,7 +856,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("description","Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -914,7 +923,7 @@ public class BookingAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -972,87 +981,9 @@ public class BookingAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
     }
-
-    private void StatsBookingCurrentDayAdmin(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-        PrintWriter writer = resp.getWriter();
-        JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
-        JSONObject resp1 = new JSONObject();
-        try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
-            String session = objReq.getString("session");
-            MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
-            if(memberLogin==null){
-                resp1.put("code", 500);
-                resp1.put("description", "Người dùng chưa đăng nhập");
-                writer.println(resp1.toString());
-                writer.close();
-                return;
-            }
-            if(memberLogin.getTime()==null){
-                resp1.put("code", 700);
-                resp1.put("description", "Hết phiên đăng nhập");
-                writer.println(resp1.toString());
-                writer.close();
-                return;
-            }
-            // kiem tra nhom
-            if(!memberLogin.getMember().getGroup().equals(Init.ADMIN_GROUP)){
-                resp1.put("code", 300);
-                resp1.put("description", "Không đủ quyền");
-                writer.println(resp1.toString());
-                writer.close();
-                return;
-            }
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            BookingDAO bookingDAO = new BookingDAO();
-            if(!bookingDAO.connect()){
-                resp1.put("code",400);
-                resp1.put("description","Không kết nối được CSDL");
-                writer.println(resp1.toString());
-                writer.close();
-                return;
-            }
-            JSONObject result = new JSONObject();
-            ArrayList<Booking> bookings = bookingDAO.getAllByDate(format.format(new Date())+" 00:00:00",null); bookingDAO.close();
-            int cancelBooking = 0;
-            int successBooking = 0;
-            int waitBooking = 0;
-            float revenue = 0;
-            for(Booking bk : bookings){
-                if(bk.getSuccess()==-1){
-                    waitBooking++;
-                    continue;
-                }
-                if(bk.getSuccess()==0){
-                    cancelBooking++;
-                    continue;
-                }
-                if(bk.getSuccess()==1){
-                    successBooking++;
-                    revenue += bk.totalPrice();
-                    continue;
-                }
-            }
-            result.put("total_booking", bookings.size());
-            result.put("cancel_booking", cancelBooking);
-            result.put("waiting_booking", waitBooking);
-            result.put("success_booking", successBooking);
-            result.put("revenue", revenue);
-            resp1.put("code",200);
-            resp1.put("description","Thành công");
-            resp1.put("result", result);
-        } catch (Exception e) {
-            resp1.put("code",300);
-            resp1.put("description",e.getMessage());
-        }
-        writer.println(resp1.toString());
-        writer.close();
-    }
-
-    
 }

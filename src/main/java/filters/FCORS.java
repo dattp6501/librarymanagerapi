@@ -24,12 +24,10 @@ public class FCORS implements Filter{
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With, remember-me");
-        System.out.println("START BEGIN ALL FILTER");
         System.out.println("IP CLIENT: " + getClientIp(req));
         countUser(getClientIp(req));
-        System.out.println("END BEGIN ALL FILTER");
-        
         chain.doFilter(req, resp);
+        System.out.println("===========================RETURN====================");
     }
     private static String getClientIp(ServletRequest request) {
         String remoteAddr = "";

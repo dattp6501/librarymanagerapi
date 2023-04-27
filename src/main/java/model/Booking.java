@@ -12,10 +12,12 @@ public class Booking {
     private ArrayList<Booked> bookeds;
     private String note;
     private int success;//-1: dang cho xu ly, 0: da duoc xu ly nhung bi huy, 1: tao thanh cong
+    private float pay=0;
+    private String address;
     private ArrayList<VoucherBooking> voucherBookings;
     public Booking() {
     }
-    public Booking(int id, Date date, Member member, ArrayList<Booked> bookeds, String note, int success, ArrayList<VoucherBooking> voucherBookings) {
+    public Booking(int id, Date date, Member member, ArrayList<Booked> bookeds, String note, int success, float pay, String address, ArrayList<VoucherBooking> voucherBookings) {
         this.id = id;
         this.date = date;
         this.member = member;
@@ -23,6 +25,8 @@ public class Booking {
         this.note = note;
         this.voucherBookings = voucherBookings;
         this.success = success;
+        this.pay = pay;
+        this.address = address;
     }
     public int getId() {
         return id;
@@ -35,6 +39,10 @@ public class Booking {
     }
     public String getDateStr() {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return format.format(date);
+    }
+    public String getDateStrMail() {
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         return format.format(date);
     }
     public void setDate(Date date) {
@@ -67,6 +75,18 @@ public class Booking {
     public void setSuccess(int success) {
         this.success = success;
     }
+    public float getPay() {
+        return pay;
+    }
+    public void setPay(float pay) {
+        this.pay = pay;
+    }
+    public String getAddress() {
+        return address;
+    }
+    public void setAddress(String address) {
+        this.address = address;
+    }
     public ArrayList<VoucherBooking> getVoucherBookings() {
         return voucherBookings;
     }
@@ -93,7 +113,7 @@ public class Booking {
     }
     @Override
     public String toString() {
-        return "Booking [id=" + id + ", date=" + date + ", member=" + member + ", bookeds=" + bookeds + ", note=" + note
+        return "Booking [id=" + id + ", date=" + date +", pay="+ pay+", address="+ address + ", member=" + member + ", bookeds=" + bookeds + ", note=" + note
                 + ", success=" + success + ", voucherBookings=" + voucherBookings + "]";
     }
 }

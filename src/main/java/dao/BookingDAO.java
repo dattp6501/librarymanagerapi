@@ -4,6 +4,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -11,20 +15,24 @@ import model.Booked;
 import model.Booking;
 import model.Member;
 import model.VoucherBooking;
+import utils.Mail;
 
 public class BookingDAO extends DAO{
     public BookingDAO() {
+        super();
     }
     public boolean addBooking(Booking booking) throws SQLException{
         connection.setAutoCommit(false);
         boolean ok = false;
-        String insert = "INSERT INTO booking(member_id,date,note,total_price,success) VALUES(?,?,?,?,?)";
+        String insert = "INSERT INTO booking(member_id,date,note,total_price,success,pay,address) VALUES(?,?,?,?,?,?,?)";
         PreparedStatement ps = connection.prepareStatement(insert,Statement.RETURN_GENERATED_KEYS);
         ps.setInt(1, booking.getMember().getId());
         ps.setString(2, booking.getDateStr());
         ps.setString(3, booking.getNote());
         ps.setFloat(4, booking.totalPrice());
         ps.setInt(5,booking.getSuccess());
+        ps.setFloat(6, booking.getPay());
+        ps.setString(7, booking.getAddress());
         ps.executeUpdate();
         ResultSet res = ps.getGeneratedKeys();
         if(res.next()){
@@ -42,6 +50,7 @@ public class BookingDAO extends DAO{
         }else{
             connection.rollback();
         }
+        ps.close();
         return ok;
     }
 
@@ -81,7 +90,7 @@ public class BookingDAO extends DAO{
 
     public ArrayList<Booking> getByMemberID(int memberID) throws SQLException, ParseException{
         ArrayList<Booking> list = new ArrayList<>();
-        String select = "SELECT * FROM booking WHERE member_id=?";
+        String select = "SELECT * FROM booking WHERE member_id=? ORDER BY date DESC";
         PreparedStatement ps = connection.prepareStatement(select);
         ps.setInt(1, memberID);
         ResultSet res = ps.executeQuery();
@@ -92,6 +101,8 @@ public class BookingDAO extends DAO{
             booking.setDate(res.getString("date"));
             booking.setNote(res.getString("note"));
             booking.setSuccess(res.getInt("success"));
+            booking.setPay(res.getFloat("pay"));
+            booking.setAddress(res.getString("address"));
             Member mem = new Member();
             mem.setId(memberID);
             booking.setMember(mem);
@@ -116,10 +127,12 @@ public class BookingDAO extends DAO{
             booking.setDate(res.getString("date"));
             booking.setNote(res.getString("note"));
             booking.setSuccess(res.getInt("success"));
+            booking.setPay(res.getFloat("pay"));
+            booking.setAddress(res.getString("address"));
 
             int memberID = res.getInt("member_id");
-            Member mem = new Member();
-            mem.setId(memberID);
+            MemberDAO memDAO = new MemberDAO(); memDAO.setConnection(connection);
+            Member mem = memDAO.getMemberByID(memberID);
             booking.setMember(mem);
 
             booking.setBookeds(bookDAO.getBookedByBookingID(booking.getId()));
@@ -133,8 +146,9 @@ public class BookingDAO extends DAO{
         ArrayList<Booking> list = new ArrayList<>();
         String select = "SELECT * FROM booking WHERE ?<=date ";
         if(endDate!=null){
-            select += "AND date<=?";
+            select += "AND date<=? ";
         }
+        select += "ORDER BY date DESC";
         PreparedStatement ps = connection.prepareStatement(select);
         ps.setString(1, startDate);
         if(endDate!=null){
@@ -148,6 +162,8 @@ public class BookingDAO extends DAO{
             booking.setDate(res.getString("date"));
             booking.setNote(res.getString("note"));
             booking.setSuccess(res.getInt("success"));
+            booking.setPay(res.getFloat("pay"));
+            booking.setAddress(res.getString("address"));
             //member
             Member mem = new Member();
             mem.setId(res.getInt("member_id"));
@@ -223,7 +239,7 @@ public class BookingDAO extends DAO{
 
     public ArrayList<VoucherBooking> getAllVoucher() throws SQLException{
         ArrayList<VoucherBooking> list = new ArrayList<>();
-        String select = "SELECT * FROM voucher_booking";
+        String select = "SELECT * FROM voucher_booking  ORDER BY created_date DESC";
         PreparedStatement ps = connection.prepareStatement(select);
         ResultSet res = ps.executeQuery();
         while(res.next()){
@@ -243,7 +259,7 @@ public class BookingDAO extends DAO{
 
     public ArrayList<VoucherBooking> getVoucherActive() throws SQLException{
         ArrayList<VoucherBooking> list = new ArrayList<>();
-        String select = "SELECT * FROM voucher_booking WHERE active=1";
+        String select = "SELECT * FROM voucher_booking WHERE active=1 ORDER BY created_date DESC";
         PreparedStatement ps = connection.prepareStatement(select);
         ResultSet res = ps.executeQuery();
         while(res.next()){
@@ -307,11 +323,12 @@ public class BookingDAO extends DAO{
             return;
         }
         try {
-            System.out.println(dao.getAllByDate("2022-12-27 00:00:00", "2022-12-27 14:07:00").size());
-            dao.close();
-        } catch (SQLException e) {
+            Mail.sendMail("dattp.b19at040@stu.ptit.edu.vn", Mail.createrFormBookingSuccess(dao.getBookingByID(29)));
+        } catch (SQLException | ParseException e) {
             e.printStackTrace();
-        }catch (ParseException e) {
+        } catch (AddressException e) {
+            e.printStackTrace();
+        } catch (MessagingException e) {
             e.printStackTrace();
         }
     }

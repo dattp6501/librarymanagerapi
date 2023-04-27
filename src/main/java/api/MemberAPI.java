@@ -41,6 +41,8 @@ public class MemberAPI extends HttpServlet{
             memberProfile(req,resp);
         }else if(url.equals(host+"/member/update_profile")){
             updateProfile(req, resp);
+        }else if(url.equals(host+"/member/check_session")){
+            checkSession(req, resp);
         }
     }
     //-----------------------------------login-------------------------
@@ -52,23 +54,23 @@ public class MemberAPI extends HttpServlet{
             System.out.println("REQUEST DATA: "+objReq.toString());
             String username = objReq.getString("username");
             String password = objReq.getString("password");
-            Member member = new Member(-1, null, null, username, password, new Group(),"");
+            Member member = new Member(-1, null, null, username, password, new Group(),"", null);
             MemberDAO memberDAO = new MemberDAO();
             if(memberDAO.connect()){
                 if(!memberDAO.checkLogin(member)) {// tai khoan hoac mat khau sai
                     resp1.put("code", 401);
                     resp1.put("description","Sai tên đăng nhập hoặc mật khẩu");
                 } else {// tai khoan mat khau dung
-                    MemberLogin memberLogin = new MemberLogin(member, null);
-                    if(!addUserToListUserLogin(memberLogin)){
-                        resp1.put("code",503);
-                        resp1.put("description","Hệ thống đang quá tải! vui lòng vào lại sau ít phút :)");
-                    }else{
-                        memberLogin.setSession(generateSession());
-                        resp1.put("code",200);
-                        resp1.put("description", "Đăng nhập thành công");
-                        resp1.put("session", memberLogin.getSession());
+                    MemberLogin memberLogin = new MemberLogin(member, generateSession());
+                    if(!memberDAO.addMemberLogin(memberLogin)){
+                        resp1.put("code",500);
+                        resp1.put("description", "Đăng nhập thất bại");
+                        memberDAO.close();
+                        return;
                     }
+                    resp1.put("code",200);
+                    resp1.put("description", "Đăng nhập thành công");
+                    resp1.put("session", memberLogin.getSession());
                 }
                 memberDAO.close();
             }else{
@@ -77,17 +79,10 @@ public class MemberAPI extends HttpServlet{
             }
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
-    }
-    private boolean addUserToListUserLogin(MemberLogin memberLogin){
-        if(Init.MEMBER_LOGINS.size() >= Init.MAX_MEMBER_LOGIN){// qua gioi hang bo nho he thong
-            return false;
-        }
-        Init.MEMBER_LOGINS.add(memberLogin);
-        return true;
     }
     private String generateSession(){
         UUID session = UUID.randomUUID();
@@ -105,6 +100,7 @@ public class MemberAPI extends HttpServlet{
             String username = objReq.getString("username");
             String password = objReq.getString("password");
             String image = null;
+            String address = null;
             if(!checkEmail(email)){
                 resp1.put("code",300);
                 resp1.put("description","Sai định dạng email");
@@ -112,7 +108,7 @@ public class MemberAPI extends HttpServlet{
                 writer.close();
                 return;
             }
-            Member member = new Member(-1, email, fullname, username, password, Init.CUSTOMER_GROUP,image);
+            Member member = new Member(-1, email, fullname, username, password, Init.CUSTOMER_GROUP,image, address);
             MemberDAO memberDAO = new MemberDAO();
             if(!memberDAO.connect()){
                 resp1.put("code",400);
@@ -141,7 +137,7 @@ public class MemberAPI extends HttpServlet{
                     message = "Tên đã tồn tại";
                 }
             }
-            resp1.put("description",message);
+            resp1.put("description",message.replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -181,24 +177,34 @@ public class MemberAPI extends HttpServlet{
                 writer.close();
                 return;
             }
-            if(!logout(session)){
-                resp1.put("code",300);
-                resp1.put("description","Đăng xuất thất bại");
+            MemberLogin memL = new MemberLogin();
+            memL.setSession(session);
+
+            MemberDAO memberDAO = new MemberDAO();
+            if(!memberDAO.connect()){
+                resp1.put("code",400);
+                resp1.put("description","Không kết nối được CSDL");
                 writer.println(resp1.toString());
                 writer.close();
                 return;
             }
+            if(!memberDAO.DeleteMemberLoginBySession(memL)){
+                resp1.put("code",500);
+                resp1.put("description","Đăng xuất thất bại");
+                writer.println(resp1.toString());
+                writer.close();
+                memberDAO.close();
+                return;
+            }
+            memberDAO.close();
             resp1.put("code",200);
             resp1.put("description","Đăng xuất thành công");
         }catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
-    }
-    private boolean logout(String session){
-        return Init.MEMBER_LOGINS.remove(new MemberLogin(null, session));
     }
     private void memberProfile(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         PrintWriter writer = resp.getWriter();
@@ -247,13 +253,14 @@ public class MemberAPI extends HttpServlet{
             memJson.put("mem_username",member.getUserName());
             memJson.put("mem_avatar",member.getImage());
             memJson.put("mem_group",member.getGroup().getName().toLowerCase());
+            memJson.put("mem_address", member.getAddress());
             result.put("member",memJson);
             resp1.put("code",200);
             resp1.put("description","Thành công");
             resp1.put("result", result);
         }catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -265,6 +272,22 @@ public class MemberAPI extends HttpServlet{
         JSONObject resp1 = new JSONObject();
         try {
             System.out.println("REQUEST DATA: "+objReq.toString());
+            String session = objReq.getString("session");
+            MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
+            if(memberLogin==null){
+                resp1.put("code", 500);
+                resp1.put("description", "Người dùng chưa đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(memberLogin.getTime()==null){
+                resp1.put("code", 700);
+                resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
             JSONObject memberJSON = objReq.getJSONObject("member");
             int id = memberJSON.getInt("mem_id");
             String fullname = memberJSON.getString("mem_fullname");
@@ -272,11 +295,13 @@ public class MemberAPI extends HttpServlet{
             String username = memberJSON.getString("mem_username");
             String password = null;// chua dung toi
             String image = null;
+            String address = null;
             try{image = memberJSON.getString("mem_avatar");
             }catch(Exception e){}
             if(image==null || image.equals("")){
                 image = null;
             }
+            try {address=memberJSON.getString("mem_address");}catch(Exception e){}
             if(!checkEmail(email)){
                 resp1.put("code",300);
                 resp1.put("description","Sai định dạng email");
@@ -284,7 +309,7 @@ public class MemberAPI extends HttpServlet{
                 writer.close();
                 return;
             }
-            Member member = new Member(id, email, fullname, username, password, new Group(Init.CUSTOMER_GROUP.getId(), "CUSTOMER", ""),image);
+            Member member = new Member(id, email, fullname, username, password, new Group(Init.CUSTOMER_GROUP.getId(), "CUSTOMER", ""),image, address);
             MemberDAO memberDAO = new MemberDAO();
             if(!memberDAO.connect()){
                 resp1.put("code",400);
@@ -315,7 +340,40 @@ public class MemberAPI extends HttpServlet{
                     message = "username đã tồn tại";
                 }
             }
-            resp1.put("description",message);
+            resp1.put("description",message.replace('"', '\''));
+        }
+        writer.println(resp1.toString());
+        writer.close();
+    }
+
+    private void checkSession(HttpServletRequest req, HttpServletResponse resp) throws JSONException, IOException{
+        PrintWriter writer = resp.getWriter();
+        JSONObject objReq =new JSONObject(JsonCustom.JsonToString(req.getReader()).toString());
+        JSONObject resp1 = new JSONObject();
+        try {
+            System.out.println("REQUEST DATA: "+objReq.toString());
+            String session = objReq.getString("session");
+            MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
+            if(memberLogin==null){
+                resp1.put("code", 500);
+                resp1.put("description", "Người dùng chưa đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(memberLogin.getTime()==null){
+                resp1.put("code", 700);
+                resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            resp1.put("code",200);
+            resp1.put("description","Người dùng đã đăng nhập");
+        } catch (Exception e) {
+            resp1.put("code",300);
+            String message = e.getMessage();
+            resp1.put("description",message.replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();

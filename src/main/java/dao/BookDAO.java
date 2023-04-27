@@ -18,9 +18,56 @@ import model.Type;
 public class BookDAO extends DAO{
     public BookDAO(){super();}
 
+    public ArrayList<Book> getBooks(String title, int limit, Type typeBook) throws SQLException{
+        if(typeBook == null){
+            return getBooksByTitle(title, limit);
+        }
+        return getBooksByTitleAndType(title, limit, typeBook);
+    }
+
     public ArrayList<Book> getBooksByTitle(String title, int limit) throws SQLException{
         ArrayList<Book> list = new ArrayList<>();
-        String select = "select * from books where title like ? ORDER BY create_date DESC";
+        String select = "select * from books where title like ? "
+        +" ORDER BY create_date DESC";
+        if(limit>0){
+            select+= " limit ? ";
+        }
+        PreparedStatement ps = connection.prepareStatement(select);
+        ps.setString(1, "%"+title+"%");
+        if(limit>0){
+            ps.setInt(2, limit);
+        }
+        ResultSet res = ps.executeQuery();
+        while(res.next()){
+            Book book = new Book();
+            book.setId(res.getInt("id"));
+            book.setTitle(res.getString("title"));
+            book.setAuthor(res.getString("author"));
+            book.setType(res.getString("typeb"));
+            try {
+                book.setReleaseDate(res.getString("release_date"));
+                book.setCreateDate(res.getString("create_date"));
+            }catch(ParseException e) {e.printStackTrace();}
+            book.setPageNumber(res.getInt("page_number"));
+            try {
+                book.setImageBytes(res.getBytes("image"));
+            } catch (SQLException e) {
+                book.setImageBytes(null);
+            }
+            book.setDescription(res.getString("description"));
+            book.setPrice(res.getFloat("price"));
+            book.setNumber(res.getInt("number"));
+            book.setTypeo(getTypeByBookID(res.getInt("id")));
+            list.add(book);
+        }
+        res.close();
+        return list;
+    }
+
+    public ArrayList<Book> getBooksByTitleAndType(String title, int limit, Type typeBook) throws SQLException{
+        ArrayList<Book> list = new ArrayList<>();
+        String select = "select * from books where title like ? "
+        +"ORDER BY create_date DESC";
         if(limit>0){
             select+= "limit ? ";
         }
@@ -53,6 +100,10 @@ public class BookDAO extends DAO{
             list.add(book);
         }
         res.close();
+        for(Book b : list){
+            System.out.println(b.getTypeo());
+        }
+        list.removeIf(b->(b.getTypeo()!=null&&(b.getTypeo().getId()!=typeBook.getId())));
         return list;
     }
 
@@ -240,7 +291,7 @@ public class BookDAO extends DAO{
     }
     public void getComments(Book book) throws SQLException, ParseException{
         ArrayList<Commemt> commemts = new ArrayList<>();
-        String select = "SELECT * FROM comment WHERE book_id=?";
+        String select = "SELECT * FROM comment WHERE book_id=? ORDER BY date DESC";
         PreparedStatement ps = connection.prepareStatement(select);
         ps.setInt(1, book.getId());
         ResultSet res = ps.executeQuery();

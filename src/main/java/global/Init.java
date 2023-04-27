@@ -13,10 +13,10 @@ public class Init {
     public static final long TIME = 2*60*60*1000;
     public static final ArrayList<MemberLogin> MEMBER_LOGINS = new ArrayList<>();
 
-    // public static final String HOST = "/librarymanagerapi";
-    // public static final String JDBC = "jdbc:mysql://sql111.epizy.com:3306/epiz_33620435_epiz_33620435_";
-    // public static final String USER_NAME_DB = "epiz_33620435";
-    // public static final String PASS_WORD_DB = "WenMKRNqFAE";
+    // public static final String HOST = "";
+    // public static final String JDBC = "jdbc:mysql://sql12.freemysqlhosting.net/sql12604853";
+    // public static final String USER_NAME_DB = "sql12604853";
+    // public static final String PASS_WORD_DB = "x2wc7WZhRv";
 
     public static final String HOST = "/librarymanagerapi";
     public static final String JDBC = "jdbc:mysql://localhost:3306/quanlysach";

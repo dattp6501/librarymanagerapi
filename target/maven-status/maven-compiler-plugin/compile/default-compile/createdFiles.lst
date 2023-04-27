@@ -9,11 +9,17 @@ filters\SessionFilter.class
 model\Member.class
 api\BookingAPI.class
 model\Booked.class
+utils\Mail$1.class
 filters\FCORS.class
 model\Type.class
 dao\MemberDAO.class
+dao\StatsDAO.class
+utils\Mail.class
 dao\BookingDAO.class
+utils\Zalo.class
 model\MemberLogin.class
+utils\DateCustom.class
+api\StatsAPI.class
 dao\BookDAO.class
 dao\DAO.class
 api\CartAPI.class
@@ -23,3 +29,4 @@ model\Commemt.class
 api\MemberAPI.class
 model\Book.class
 model\VoucherBooking.class
+utils\vnpay.class

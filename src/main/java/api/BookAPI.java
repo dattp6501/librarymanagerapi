@@ -73,9 +73,16 @@ public class BookAPI extends HttpServlet{
                 return;
             }
             
-            String title = objReq.getString("title");
+            String title = null;
+            try {title = objReq.getString("title");} catch (Exception e) {title="";}
             int limit = -1;
             try{limit = objReq.getInt("limit");}catch(Exception e) {}
+            Type typeBook = null;
+            try {
+                int bookID = objReq.getJSONObject("type_book").getInt("type_id");
+                typeBook = new Type();
+                typeBook.setId(bookID);
+            } catch (Exception e) {}
             BookDAO bookDAO = new BookDAO();
             if(!bookDAO.connect()){
                 resp1.put("code",400);
@@ -85,7 +92,7 @@ public class BookAPI extends HttpServlet{
                 return;
             }
             JSONObject result = new JSONObject();
-            ArrayList<Book> list = bookDAO.getBooksByTitle(title, limit);
+            ArrayList<Book> list = bookDAO.getBooks(title, limit, typeBook);
             bookDAO.close();
             JSONArray listJson = new JSONArray();
             for(Book b : list){
@@ -125,7 +132,7 @@ public class BookAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -199,7 +206,7 @@ public class BookAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -317,7 +324,7 @@ public class BookAPI extends HttpServlet{
                     message = "Tiêu đề truyện đã tồn tại";
                 }
             }
-            resp1.put("description",message);
+            resp1.put("description",message.replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -377,7 +384,7 @@ public class BookAPI extends HttpServlet{
             bookDAO.close();
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -496,7 +503,7 @@ public class BookAPI extends HttpServlet{
             }
             resp1.put("description",message);
         }
-        writer.println(resp1.toString());
+        writer.println(resp1.toString().replace('"', '\''));
         writer.close();
     }
     // comment
@@ -549,7 +556,7 @@ public class BookAPI extends HttpServlet{
             resp1.put("description", "Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -614,7 +621,7 @@ public class BookAPI extends HttpServlet{
             resp1.put("result", result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -668,7 +675,7 @@ public class BookAPI extends HttpServlet{
             resp1.put("result",result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -737,7 +744,7 @@ public class BookAPI extends HttpServlet{
                     message = "Thể loại đã tồn tại";
                 }
             }
-            resp1.put("description",message);
+            resp1.put("description",message.replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();

@@ -4,12 +4,12 @@ import utils.ImageCustom;
 
 public class Member {
     private int id;
-    private String email,fullName,userName,passWord;
+    private String email,fullName,userName,passWord,address;
     private Group group;
     private String image;
     public Member() {
     }
-    public Member(int id, String email, String fullName, String userName, String passWord, Group group, String image) {
+    public Member(int id, String email, String fullName, String userName, String passWord, Group group, String image, String address) {
         this.id = id;
         this.email = email;
         this.fullName = fullName;
@@ -17,8 +17,9 @@ public class Member {
         this.passWord = passWord;
         this.group = group;
         this.image = image;
+        this.address = address;
     }
-    public Member(int id, String email, String fullName, String userName, String passWord, Group group, byte[] image) {
+    public Member(int id, String email, String fullName, String userName, String passWord, Group group, byte[] image, String address) {
         this.id = id;
         this.email = email;
         this.fullName = fullName;
@@ -30,6 +31,7 @@ public class Member {
         }else{
             this.image = ImageCustom.bytesToB64(image);
         }
+        this.address = address;
     }
     public String getImage() {
         return image;
@@ -84,6 +86,12 @@ public class Member {
     public void setGroup(Group group) {
         this.group = group;
     }
+    public String getAddress() {
+        return address;
+    }
+    public void setAddress(String address) {
+        this.address = address;
+    }
     
     @Override
     public int hashCode() {
@@ -110,6 +118,6 @@ public class Member {
     @Override
     public String toString() {
         return "Member [id=" + id + ", email=" + email + ", fullName=" + fullName + ", userName=" + userName
-                + ", passWord=" + passWord + ", group=" + group + ", image=" + image + "]";
+                + ", passWord=" + passWord + ", address=" + address + ", group=" + group + ", image=" + image + "]";
     }
 }

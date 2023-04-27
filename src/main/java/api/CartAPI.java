@@ -98,7 +98,7 @@ public class CartAPI extends HttpServlet{
             resp1.put("result",result);
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -165,7 +165,7 @@ public class CartAPI extends HttpServlet{
             resp1.put("description", "Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
@@ -216,7 +216,7 @@ public class CartAPI extends HttpServlet{
             resp1.put("description", "Thành công");
         } catch (Exception e) {
             resp1.put("code",300);
-            resp1.put("description",e.getMessage());
+            resp1.put("description",e.getMessage().replace('"', '\''));
         }
         writer.println(resp1.toString());
         writer.close();
