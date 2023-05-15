@@ -118,6 +118,6 @@ public class Member {
     @Override
     public String toString() {
         return "Member [id=" + id + ", email=" + email + ", fullName=" + fullName + ", userName=" + userName
-                + ", passWord=" + passWord + ", address=" + address + ", group=" + group + ", image=" + image + "]";
+                + ", passWord=" + passWord + ", address=" + address + ", group=" + group + ", image=" + "base64" + "]";
     }
 }

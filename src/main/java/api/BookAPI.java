@@ -29,7 +29,16 @@ public class BookAPI extends HttpServlet{
         String url = req.getRequestURI();
         String host = Init.HOST;
         System.out.println(url);
-        if(url.equals(host+"/book/get_books")){
+        // 
+        if(url.equals(host+"/book/add_comment")){
+            addComment(req, resp);
+        }else if(url.equals(host+"/book/get_book_by_id")){
+            getBookByID(req, resp);
+        }else if(url.equals(host+"/book/get_comments")){
+            getComments(req, resp);
+        }
+        // admin
+        else if(url.equals(host+"/book/get_books")){
             getBooks(req,resp);
         }else if(url.equals(host+"/book/update_books")){
             updateBooks(req,resp);
@@ -37,17 +46,12 @@ public class BookAPI extends HttpServlet{
             deleteBooks(req,resp);
         }else if(url.equals(host+"/book/add_books")){
             addBooks(req,resp);
-        }else if(url.equals(host+"/book/add_comment")){
-            addComment(req, resp);
-        }else if(url.equals(host+"/book/get_comments")){
-            getComments(req, resp);
-        }else if(url.equals(host+"/book/get_book_by_id")){
-            getBookByID(req, resp);
         }else if(url.equals(host+"/book/get_all_type")){
             getAllType(req, resp);
         }else if(url.equals(host+"/book/add_type")){
             addType(req, resp);
         }
+        // custemer
     }
     //
     private void getBooks(HttpServletRequest req, HttpServletResponse resp) throws IOException{
@@ -55,7 +59,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -143,7 +147,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -217,7 +221,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -335,7 +339,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -395,7 +399,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -503,7 +507,7 @@ public class BookAPI extends HttpServlet{
             }
             resp1.put("description",message);
         }
-        writer.println(resp1.toString().replace('"', '\''));
+        writer.println(resp1.toString());
         writer.close();
     }
     // comment
@@ -512,7 +516,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -537,6 +541,11 @@ public class BookAPI extends HttpServlet{
             // comment
             String content = "";
             int star = objReq.getInt("star");
+            if(star<=0 || star>5){
+                resp1.put("code",300);
+                resp1.put("description", "Số sao phải nằm trong khoản từ 1 đến 5");
+                return;
+            }
             try{content = objReq.getString("content");}catch(Exception e){}
             Commemt commemt = new Commemt(memberLogin.getMember(), content, star, new Date());
             BookDAO bookDAO = new BookDAO();
@@ -566,7 +575,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -632,7 +641,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -686,7 +695,7 @@ public class BookAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){

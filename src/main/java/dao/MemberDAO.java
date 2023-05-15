@@ -149,14 +149,33 @@ public class MemberDAO extends DAO{
     }
 
     public boolean update(Member member) throws SQLException{
+        Member memOld = getMemberByID(member.getId());
+        if(memOld == null){
+            return false;
+        }
         boolean ok = false;
-        String sql = "UPDATE members SET fullname=?,email=?,username=?,image=?,address=? WHERE id=?";
+        String sql = "UPDATE members SET fullname=?,image=?,address=?,email=?,username=? WHERE id=?";
         PreparedStatement ps = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
         ps.setString(1,member.getFullName());
-        ps.setString(2,member.getEmail());
-        ps.setString(3,member.getUserName());
-        ps.setBytes(4, member.getImageBytes());
-        ps.setString(5, member.getAddress());
+        ps.setBytes(2, member.getImageBytes());
+        ps.setString(3, member.getAddress());
+        // 
+        // int index = 4;
+        // if(!memOld.getEmail().equals(member.getEmail())){
+        //     sql+= ",email=?";
+        //     ps.setString(index, member.getEmail());
+        //     index++;
+        // }
+        // if(!memOld.getUserName().equals(member.getUserName())){
+        //     sql += ",username=?";
+        //     ps.setString(index, member.getUserName());
+        //     index++;
+        // }
+        // sql += " WHERE id=?";
+        // ps.setInt(index, member.getId());
+        //
+        ps.setString(4, member.getEmail());
+        ps.setString(5, member.getUserName());
         ps.setInt(6, member.getId());
         ok = ps.executeUpdate()>0;
         return ok;

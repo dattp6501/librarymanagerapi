@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import model.Book;
 import model.Cart;
 import model.Member;
@@ -89,6 +92,40 @@ public class CartDAO extends DAO{
         ok = ps.executeUpdate()>0;
         ps.close();
         return ok;
+    }
+    public boolean addBooksToCard(JSONArray books, int memberID) throws SQLException{
+        // lay gio hang cua member
+        Cart cart = getCartByMemberID(memberID);
+        // them san pham vao gio hang
+        connection.setAutoCommit(false);
+        int count = 0;
+        PreparedStatement ps = null;
+        for(Object o : books){
+            JSONObject b = (JSONObject)o;
+            Book newBook = new Book(); newBook.setId(b.getInt("book_id")); newBook.setNumber(b.getInt("book_number"));
+            // da co trong gio hang
+            if(cart.getBooks().contains(newBook)){
+                String update = "UPDATE product_of_cart SET book_number=? WHERE cart_id=? AND book_id=?";
+                ps = connection.prepareStatement(update);
+                ps.setInt(1, newBook.getNumber());
+                ps.setInt(2, cart.getId());
+                ps.setInt(3, newBook.getId());
+            }else{// chua co trong gio hang
+                String insert = "INSERT INTO product_of_cart(cart_id,book_id,book_number) VALUES(?,?,?)";
+                ps = connection.prepareStatement(insert);
+                ps.setInt(1, cart.getId());
+                ps.setInt(2, newBook.getId());
+                ps.setInt(3, newBook.getNumber());
+            }
+            count += ps.executeUpdate();
+        }
+        ps.close();
+        if(count==books.length()){
+            connection.setAutoCommit(true);
+            return true;
+        }
+        connection.rollback();
+        return false;
     }
 
     public boolean removeBookInCart(Book book, int memberID) throws SQLException{

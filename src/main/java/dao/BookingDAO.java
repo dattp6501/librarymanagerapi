@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -21,10 +22,13 @@ public class BookingDAO extends DAO{
     public BookingDAO() {
         super();
     }
+    public BookingDAO(Connection connection) {
+        super(connection);
+    }
     public boolean addBooking(Booking booking) throws SQLException{
         connection.setAutoCommit(false);
         boolean ok = false;
-        String insert = "INSERT INTO booking(member_id,date,note,total_price,success,pay,address) VALUES(?,?,?,?,?,?,?)";
+        String insert = "INSERT INTO booking(member_id,date,note,total_price,success,pay,address,longg,latt) VALUES(?,?,?,?,?,?,?,?,?)";
         PreparedStatement ps = connection.prepareStatement(insert,Statement.RETURN_GENERATED_KEYS);
         ps.setInt(1, booking.getMember().getId());
         ps.setString(2, booking.getDateStr());
@@ -33,6 +37,8 @@ public class BookingDAO extends DAO{
         ps.setInt(5,booking.getSuccess());
         ps.setFloat(6, booking.getPay());
         ps.setString(7, booking.getAddress());
+        ps.setString(8, booking.getLong());
+        ps.setString(9, booking.getLat());
         ps.executeUpdate();
         ResultSet res = ps.getGeneratedKeys();
         if(res.next()){
@@ -75,6 +81,18 @@ public class BookingDAO extends DAO{
         }else{
             connection.rollback();
         }
+        return ok;
+    }
+    public boolean updatePay(int bookingID, float amount) throws SQLException{
+        boolean ok = false;
+        String update = "UPDATE booking SET pay=pay+? WHERE id=? AND not success=-3";
+        PreparedStatement ps = null;
+        ps = connection.prepareStatement(update);
+        ps.setFloat(1, amount);
+        ps.setInt(2, bookingID);
+        ok = ps.executeUpdate()>0;
+        ps.close();
+        connection.close();
         return ok;
     }
 
@@ -153,6 +171,44 @@ public class BookingDAO extends DAO{
         ps.setString(1, startDate);
         if(endDate!=null){
             ps.setString(2,endDate);
+        }
+        ResultSet res = ps.executeQuery();
+        BookDAO bookDAO = new BookDAO(); bookDAO.setConnection(connection);
+        while(res.next()){
+            Booking booking = new Booking();
+            booking.setId(res.getInt("id"));
+            booking.setDate(res.getString("date"));
+            booking.setNote(res.getString("note"));
+            booking.setSuccess(res.getInt("success"));
+            booking.setPay(res.getFloat("pay"));
+            booking.setAddress(res.getString("address"));
+            //member
+            Member mem = new Member();
+            mem.setId(res.getInt("member_id"));
+            MemberDAO memberDAO = new MemberDAO(); memberDAO.setConnection(connection);
+            if(!memberDAO.get(mem)){// khach hang khong ton tai
+                continue;
+            }
+            booking.setMember(mem);
+            booking.setBookeds(bookDAO.getBookedByBookingID(booking.getId()));
+
+            booking.setVoucherBookings(getVoucherByBookingID(booking.getId()));
+            list.add(booking);
+        }
+        return list;
+    }
+    public ArrayList<Booking> getAllByDate(String startDate, String endDate, int success) throws SQLException, ParseException{
+        ArrayList<Booking> list = new ArrayList<>();
+        String select = "SELECT * FROM booking WHERE success=? AND ?<=date ";
+        if(endDate!=null){
+            select += "AND date<=? ";
+        }
+        select += "ORDER BY date DESC";
+        PreparedStatement ps = connection.prepareStatement(select);
+        ps.setInt(1, success);
+        ps.setString(2, startDate);
+        if(endDate!=null){
+            ps.setString(3,endDate);
         }
         ResultSet res = ps.executeQuery();
         BookDAO bookDAO = new BookDAO(); bookDAO.setConnection(connection);
@@ -312,6 +368,7 @@ public class BookingDAO extends DAO{
         }
         return ok;
     }
+
 
 
 

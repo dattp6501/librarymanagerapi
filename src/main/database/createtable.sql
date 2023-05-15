@@ -52,13 +52,15 @@ create table comment(
     content text,
     date datetime not null,
     foreign key(book_id) references books(id),
-    foreign key(member_id) references members(id),
+    foreign key(member_id) references members(id)
 );
 alter table books auto_increment = 1;
 
 create table booking(
 	id integer primary key auto_increment,
     member_id integer not null,
+    longg varchar(20) not null,
+    latt varchar(20) not null,
     date datetime not null,
     address text not null,
     pay float not null,
@@ -68,6 +70,16 @@ create table booking(
     foreign key(member_id) references members(id)
 );
 alter table booking auto_increment = 1;
+
+create table transaction_history(
+    member_id integer,
+    booking_id integer,
+    date datetime not null,
+    amount float not null,
+    payment_type varchar(20) not null,
+    foreign key(member_id) references members(id),
+    foreign key(booking_id) references booking(id)
+);
 
 create table voucher_booking(
 	id integer primary key auto_increment,
@@ -94,7 +106,7 @@ create table booked(
     number integer not null,
     note text,
     foreign key(book_id) references books(id),
-    foreign key(booking_id) references booking(id),
+    foreign key(booking_id) references booking(id)
 );
 
 
@@ -113,11 +125,11 @@ create table product_of_cart(
     foreign key(book_id) references books(id)
 );
 
-
 create table member_login(
 	session_id varchar(50) primary key,
     member_id integer not null,
-    time_to datetime not null
+    time_to datetime not null,
+    foreign key(member_id) references members(id)
 );
 
 

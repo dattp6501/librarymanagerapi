@@ -236,7 +236,7 @@ public class Book {
     @Override
     public String toString() {
         return "Book [id=" + id + ", pageNumber=" + pageNumber + ", number=" + number + ", title=" + title + ", author="
-                + author + ", type=" + type + ", image=" + image + ", description=" + description + ", releaseDate="
+                + author + ", type=" + type + ", image=" + "base64" + ", description=" + description + ", releaseDate="
                 + getReleaseDateFormat() + ", createDate=" + getCreateDateFormat() + ", commemts=" + commemts + ", price=" + price
                 + ", typeo=" + typeo + "]";
     }

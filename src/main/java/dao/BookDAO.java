@@ -5,8 +5,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import model.Book;
 import model.Booked;
@@ -397,6 +402,86 @@ public class BookDAO extends DAO{
         }
         return list;
     }
+    // lay danh sách các quyển sách đã được mua trong 1 khoản thòi gian, chưa có lượng sao đánh giá trung bình
+    public JSONArray getListBookedDateRange(Date from, Date to) throws SQLException{
+        JSONArray list = new JSONArray();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String sql = "SELECT book_id, sum(number) as number "
+        + "FROM booking "
+        + "INNER JOIN booked "
+        + "ON booking.id  = booked.booking_id "
+        + "WHERE ?<=date AND date<=?"
+        + "GROUP BY(book_id) "
+        + "ORDER BY number DESC ";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1, format.format(from)+" 00:00:00");
+        ps.setString(2, format.format(to)+" 23:59:59");
+        ResultSet res = ps.executeQuery();
+        while(res.next()){
+            Book book = getBookByID(res.getInt("book_id"));
+            if(book!=null){
+                JSONObject bookJSON = new JSONObject();
+                bookJSON.put("book_id", res.getInt("book_id"));
+                bookJSON.put("book_number", res.getInt("number"));
+                bookJSON.put("book_title", book.getTitle());
+                bookJSON.put("book_author", book.getAuthor());
+                // bookJSON.put("book_image", book.getImage());
+                if(book.getTypeo()!=null){
+                    JSONObject typeJSON = new JSONObject();
+                    typeJSON.put("type_id", book.getTypeo().getId());
+                    typeJSON.put("type_name", book.getTypeo().getName());
+                    typeJSON.put("type_note", book.getTypeo().getNote());
+                    bookJSON.put("book_typeo", typeJSON);
+                }
+                list.put(bookJSON);
+            }
+        }
+        return list;
+    }
+
+    // lay danh sách các quyển sách đã được mua trong 1 khoảng thòi gian, đã có lượng dánh giá sao trung bình
+    public JSONArray getListBookedDateRange1(Date from, Date to) throws SQLException{
+        JSONArray list = new JSONArray();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String sql = "SELECT booktmp.book_id,booktmp.number,sum(comment.star)/count(comment.star) as star "
+        + "FROM (SELECT book_id, sum(number) as number "
+        + "FROM booking "
+        + "INNER JOIN booked "
+        + "ON booking.id = booked.booking_id "
+        + "WHERE ?<=date AND date<=? "
+        + "GROUP BY(book_id)) as booktmp "
+        + "LEFT JOIN comment "
+        + "ON booktmp.book_id = comment.book_id "
+        + "GROUP BY(booktmp.book_id) "
+        + "ORDER BY number DESC ";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1, format.format(from)+" 00:00:00");
+        ps.setString(2, format.format(to)+" 23:59:59");
+        ResultSet res = ps.executeQuery();
+        while(res.next()){
+            Book book = getBookByID(res.getInt("book_id"));
+            
+            if(book!=null){
+                JSONObject bookJSON = new JSONObject();
+                bookJSON.put("book_id", res.getInt("book_id"));
+                bookJSON.put("book_number", res.getInt("number"));
+                bookJSON.put("book_star", res.getFloat("star"));
+                bookJSON.put("book_title", book.getTitle());
+                bookJSON.put("book_author", book.getAuthor());
+                bookJSON.put("book_image", book.getImage());
+                // bookJSON.put("book_image", book.getImage());
+                if(book.getTypeo()!=null){
+                    JSONObject typeJSON = new JSONObject();
+                    typeJSON.put("type_id", book.getTypeo().getId());
+                    typeJSON.put("type_name", book.getTypeo().getName());
+                    typeJSON.put("type_note", book.getTypeo().getNote());
+                    bookJSON.put("book_typeo", typeJSON);
+                }
+                list.put(bookJSON);
+            }
+        }
+        return list;
+    }
 
 
 
@@ -410,11 +495,29 @@ public class BookDAO extends DAO{
         Type type = new Type(); type.setId(1);
         book.setTypeo(null);
         try {
-            // System.out.println(dao.add(book));
-            System.out.println(dao.delete(book));
+            Date from = null;
+            Date to = null;
+            Calendar calendarFrom = Calendar.getInstance();
+            calendarFrom.set(Calendar.YEAR, 2022);
+            calendarFrom.set(Calendar.MONTH, 0);
+            calendarFrom.set(Calendar.DATE, 1);
+            from = calendarFrom.getTime();
+
+            Calendar calendarTo = Calendar.getInstance();
+            int maxDateOfMonth = calendarTo.getActualMaximum(Calendar.DAY_OF_MONTH);
+            calendarTo.set(Calendar.MONTH, 11);
+            calendarTo.set(Calendar.DATE, maxDateOfMonth);
+            to = calendarTo.getTime();
+            for(Object o : dao.getListBookedDateRange1(from, to)){
+                try {
+                    System.out.println(((JSONObject) o).getFloat("book_star"));
+                } catch (Exception e) {
+                    System.out.println(0);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        dao.close();
+        dao.close(); 
     }
 }

@@ -31,10 +31,13 @@ public class CartAPI extends HttpServlet{
         String url = req.getRequestURI();
         String host = Init.HOST;
         System.out.println(url);
+        // custemer
         if(url.equals(host+"/cart/get_cart")){
             getCard(req,resp);
         }else if(url.equals(host+"/cart/add_book")){
             addBookToCard(req,resp);
+        }else if(url.equals(host+"/cart/add_books")){
+            addBooksToCard(req,resp);
         }else if(url.equals(host+"/cart/remove_book")){
             removeBookInCard(req,resp);
         }
@@ -44,7 +47,7 @@ public class CartAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -57,6 +60,13 @@ public class CartAPI extends HttpServlet{
             if(memberLogin.getTime()==null){
                 resp1.put("code", 700);
                 resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(!memberLogin.getMember().getGroup().equals(Init.CUSTOMER_GROUP)){
+                resp1.put("code", 300);
+                resp1.put("description", "Người dùng không có chức năng giỏ hàng");
                 writer.println(resp1.toString());
                 writer.close();
                 return;
@@ -87,6 +97,7 @@ public class CartAPI extends HttpServlet{
                     bookJSON.put("book_image", b.getImage());
                     bookJSON.put("book_price", b.getPrice());
                     bookJSON.put("book_description", b.getDescription());
+                    bookJSON.put("book_note", "");
                 }catch(Exception e){}
                 listBookJSON.put(bookJSON);
             }
@@ -109,7 +120,7 @@ public class CartAPI extends HttpServlet{
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -122,6 +133,13 @@ public class CartAPI extends HttpServlet{
             if(memberLogin.getTime()==null){
                 resp1.put("code", 700);
                 resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(!memberLogin.getMember().getGroup().equals(Init.CUSTOMER_GROUP)){
+                resp1.put("code", 300);
+                resp1.put("description", "Người dùng không có chức năng giỏ hàng");
                 writer.println(resp1.toString());
                 writer.close();
                 return;
@@ -145,7 +163,8 @@ public class CartAPI extends HttpServlet{
                 writer.close();
                 return;
             }
-            if(bookDAO.getBookByID(bookID).getTitle()==null || bookDAO.getBookByID(bookID).getTitle().equals("")){
+            Book bookDB = bookDAO.getBookByID(bookID);
+            if(bookDB==null){
                 resp1.put("code",300);
                 resp1.put("description","Sách không tồn tại");
                 bookDAO.close();
@@ -170,13 +189,23 @@ public class CartAPI extends HttpServlet{
         writer.println(resp1.toString());
         writer.close();
     }
-
-    private void removeBookInCard(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+    private void addBooksToCard(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        /*
+        {
+            "session": "",
+            "books": [
+                {
+                    "book_id": 10,
+                    "book_number": 1
+                }
+            ]
+        }
+        */
         PrintWriter writer = resp.getWriter();
         JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
         JSONObject resp1 = new JSONObject();
         try {
-            System.out.println("REQUEST DATA: "+objReq.toString());
+            // System.out.println("REQUEST DATA: "+objReq.toString());
             String session = objReq.getString("session");
             MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
             if(memberLogin==null){
@@ -189,6 +218,85 @@ public class CartAPI extends HttpServlet{
             if(memberLogin.getTime()==null){
                 resp1.put("code", 700);
                 resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(!memberLogin.getMember().getGroup().equals(Init.CUSTOMER_GROUP)){
+                resp1.put("code", 300);
+                resp1.put("description", "Người dùng không có chức năng giỏ hàng");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            // 
+            JSONArray books = objReq.getJSONArray("books");
+            BookDAO bookDAO = new BookDAO();
+            if(!bookDAO.connect()){
+                resp1.put("code",400);
+                resp1.put("description","Không kết nối được CSDL");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            for(int i=0; i<books.length(); i++){
+                JSONObject b = (JSONObject)books.get(i);
+                int bookNumber = b.getInt("book_number");
+                if(bookNumber<=0){// xoa nhung sach co so luong <=0
+                    books.remove(i);
+                    continue;
+                }
+                int bookID = b.getInt("book_id");
+                Book book = bookDAO.getBookByID(bookID);
+                if(book==null){// xoa sach khong co trong cua hang
+                    books.remove(i);
+                    continue;
+                }
+            }
+            // luu vao db
+            CartDAO cartDAO = new CartDAO(); cartDAO.setConnection(bookDAO.getConnection());
+            if(!cartDAO.addBooksToCard(books, memberLogin.getMember().getId())){
+                resp1.put("code",300);
+                resp1.put("description", "Không thêm sách vào giỏ hàng được");
+                bookDAO.close();
+                return;
+            }
+            bookDAO.close();
+            resp1.put("code",200);
+            resp1.put("description", "Thành công");
+        } catch (Exception e) {
+            resp1.put("code",300);
+            resp1.put("description",e.getMessage().replace('"', '\''));
+        }
+        writer.println(resp1.toString());
+        writer.close();
+    }
+
+    private void removeBookInCard(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+        PrintWriter writer = resp.getWriter();
+        JSONObject objReq = JsonCustom.toJsonObject(req.getReader());
+        JSONObject resp1 = new JSONObject();
+        try {
+            // System.out.println("REQUEST DATA: "+objReq.toString());
+            String session = objReq.getString("session");
+            MemberLogin memberLogin = SessionFilter.checkMemberBySession(session);
+            if(memberLogin==null){
+                resp1.put("code", 500);
+                resp1.put("description", "Người dùng chưa đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(memberLogin.getTime()==null){
+                resp1.put("code", 700);
+                resp1.put("description", "Hết phiên đăng nhập");
+                writer.println(resp1.toString());
+                writer.close();
+                return;
+            }
+            if(!memberLogin.getMember().getGroup().equals(Init.CUSTOMER_GROUP)){
+                resp1.put("code", 300);
+                resp1.put("description", "Người dùng không có chức năng giỏ hàng");
                 writer.println(resp1.toString());
                 writer.close();
                 return;

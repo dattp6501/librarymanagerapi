@@ -14,6 +14,8 @@ public class Booking {
     private int success;//-1: dang cho xu ly, 0: da duoc xu ly nhung bi huy, 1: tao thanh cong
     private float pay=0;
     private String address;
+    private String log;
+    private String lat;
     private ArrayList<VoucherBooking> voucherBookings;
     public Booking() {
     }
@@ -27,6 +29,18 @@ public class Booking {
         this.success = success;
         this.pay = pay;
         this.address = address;
+    }
+    public String getLong() {
+        return log;
+    }
+    public void setLong(String log) {
+        this.log = log;
+    }
+    public String getLat() {
+        return lat;
+    }
+    public void setLat(String lat) {
+        this.lat = lat;
     }
     public int getId() {
         return id;

@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import utils.DateCustom;
@@ -16,7 +17,7 @@ public class StatsDAO extends DAO{
         PreparedStatement ps = null;
         for(int month=1; month<=12; month++){
             // tong trong thang
-            String select = "SELECT * FROM booking WHERE ?<=date and date<=? and not success=-1";
+            String select = "SELECT * FROM booking WHERE ?<=date and date<=? and success=1";// 0 da huy, -1: dang xu ly, 1: thanh cong
             ps = connection.prepareStatement(select);
             int maxDay = DateCustom.getDateNumberOfMonth(month, year);
             ps.setString(1, year+"-"+month+"-"+"1 00:00:00");
@@ -63,35 +64,30 @@ public class StatsDAO extends DAO{
         }
         return list;
     }
-    // public JSONArray StatsRevenueMonth(int year, int month) throws SQLException{
-    //     JSONArray list = new JSONArray();
-    //     String select = "SELECT * FROM booking WHERE ?<=date and date<=? and not success=-1";
-    //     PreparedStatement ps = connection.prepareStatement(select);
-    //     for(int day=1; day<=DateCustom.getDateNumberOfMonth(month, year); day++){
-    //         ps.setString(1, year+"-"+month+"-"+day+" 00:00:00");
-    //         ps.setString(2, year+"-"+month+"-"+day+" 23:59:59");
-    //         ResultSet res = ps.executeQuery();
-    //         int totalTheory = 0;//trên lý thuyết
-    //         int totalReal = 0; //trên thực tế
-    //         int totalPay = 0;//tiền đã được thanh toán
-    //         while(res.next()){
-    //             totalTheory+= res.getFloat("total_price");
-    //             totalPay += res.getFloat("pay");
-    //         }
-    //         totalReal = totalPay;
-    //         JSONObject d = new JSONObject();
-    //         d.put("revenue_theory", totalTheory);
-    //         d.put("revenue_real", totalReal);
-    //         d.put("date",String.format("%02d/%02d/%d",day,month,year));
-    //         list.put(d);
-    //     }
-    //     return list;
-    // }
-    // public static void main(String[] args) throws SQLException {
-    //     StatsDAO statsDAO = new StatsDAO();
-    //     if(statsDAO.connect()){
-    //         System.out.println(statsDAO.StatsRevenueMonth(2023,4));
-    //         statsDAO.close();
-    //     }
-    // }
+    public JSONArray getPointsBooking() throws SQLException{
+        JSONArray list = new JSONArray();
+        String sql = "SELECT * FROM booking";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ResultSet res = ps.executeQuery();
+        while(res.next()){
+            if(res.getString("longg")==null || res.getString("longg").equals("null") || res.getString("longg").equals("")){
+                continue;
+            }
+            JSONObject point = new JSONObject();
+            point.put("type", "Feature");
+            JSONObject geometry = new JSONObject();
+            geometry.put("type","Point");
+            geometry.put("coordinates", new JSONArray("["+res.getDouble("longg")+","+res.getDouble("latt")+","+0+"]"));
+            point.put("geometry", geometry);
+            list.put(point);
+        }
+        return list;
+    }
+    public static void main(String[] args) throws JSONException, SQLException {
+        StatsDAO dao = new StatsDAO();
+        if(dao.connect()){
+            System.out.println(dao.getPointsBooking().get(0));
+            dao.close();
+        }
+    }
 }
